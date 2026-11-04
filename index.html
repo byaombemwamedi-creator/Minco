@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cooperative : Projet MINCO</title>
+  <style>
+    :root {
+      --bg-main: #f9f9f9;
+      --card-bg: #ffffff;
+      --text: #2c3e50;
+      --primary: #16a085;
+      --secondary: #8e44ad;
+      --accent: #27ae60;
+      --danger: #c53030;
+      --info: #2980b9;
+      --warning: #d35400;
+    }
+    body.dark-mode {
+      --bg-main: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --primary: #0d9488;
+      --secondary: #a855f7;
+      --accent: #22c55e;
+      --danger: #f87171;
+      --info: #38bdf8;
+      --warning: #fb923c;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:var(--bg-main); color:var(--text); padding-bottom:40px; transition: background 0.3s, color 0.3s; }
+
+    /* ANIMATIONS */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulseGlow {
+      0% { text-shadow: 0 0 5px rgba(255,255,255,0.4); }
+      50% { text-shadow: 0 0 20px rgba(255,255,255,0.8), 0 0 30px var(--primary); }
+      100% { text-shadow: 0 0 5px rgba(255,255,255,0.4); }
+    }
+    @keyframes floatIcon {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .animated-section { animation: fadeIn 0.5s ease-out forwards; }
+
+    /* TOPBAR */
+    .topbar {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15); position: sticky; top: 0; z-index: 1000;
+    }
+    .brand-container { display: flex; align-items: center; gap: 12px; }
+    .brand-icon { font-size: 28px; animation: floatIcon 3s ease-in-out infinite; }
+    .topbar h1 {
+      margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 0.5px;
+      background: linear-gradient(to right, #ffffff, #e0f2fe);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: pulseGlow 4s infinite;
+    }
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+
+    /* SIDEBAR */
+    .sidebar-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
+      z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.3s ease;
+    }
+    .sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+    .sidebar {
+      position: fixed; top: 0; right: -300px; width: 280px; height: 100%;
+      background: var(--card-bg); color: var(--text); z-index: 2001;
+      box-shadow: -5px 0 25px rgba(0,0,0,0.2); transition: right 0.3s ease;
+      display: flex; flex-direction: column; padding: 20px; overflow-y: auto;
+    }
+    .sidebar.active { right: 0; }
+    .sidebar-header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 15px;
+    }
+    .sidebar-menu-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+    .sidebar-menu-list li button {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      padding: 12px 15px; background: rgba(0,0,0,0.03); border: none; border-radius: 8px;
+      color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: left;
+    }
+    .sidebar-menu-list li button:hover { background: var(--primary); color: white; transform: translateX(4px); }
+
+    /* MODALS */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6); z-index: 3000;
+      display: flex; justify-content: center; align-items: center;
+      opacity: 0; visibility: hidden; transition: all 0.3s; padding: 15px;
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal-content {
+      background: var(--card-bg); color: var(--text); width: 100%; max-width: 500px;
+      border-radius: 14px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      max-height: 90vh; overflow-y: auto; position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 15px; right: 15px; background: none; border: none;
+      font-size: 20px; cursor: pointer; color: var(--text);
+    }
+
+    .container { max-width: 850px; margin: 25px auto; padding: 0 15px; }
+    
+    .section {
+      margin-top: 22px; padding: 22px; border-radius: 14px;
+      background: var(--card-bg); border: 2px solid var(--primary);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.06); transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .section:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .section h3 { margin-top: 0; color: var(--primary); display: flex; justify-content: space-between; align-items: center; font-size: 18px; border-bottom: 2px dashed rgba(0,0,0,0.08); padding-bottom: 8px; }
+
+    .btn {
+      background: var(--accent); color: white; border: none; padding: 10px 16px;
+      border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.2s ease;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn:hover { opacity: 0.9; transform: scale(1.02); }
+    .btn:active { transform: scale(0.98); }
+    .btn-danger { background: var(--danger); padding: 6px 12px; font-size: 12px; }
+    .btn-info { background: var(--info); }
+    .btn-secondary { background: var(--secondary); }
+
+    input, select, textarea {
+      width: 100%; padding: 11px; margin: 8px 0; border: 1px solid #cbd5e1;
+      border-radius: 8px; background: var(--card-bg); color: var(--text); font-size: 14px; transition: border-color 0.2s;
+    }
+    textarea { resize: vertical; min-height: 70px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.15); }
+    
+    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 6px; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 15px; }
+    .list-item:hover { background: rgba(0,0,0,0.015); border-radius: 6px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
+    .stat-card { background: var(--card-bg); padding: 18px; border-radius: 12px; border-left: 6px solid var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.04); }
+    .stat-card h4 { margin: 0; font-size: 13px; color: gray; text-transform: uppercase; }
+    .stat-card p { margin: 8px 0 0 0; font-size: 22px; font-weight: bold; color: var(--primary); }
+
+    .leader-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+    @media (max-width: 600px) { .leader-grid { grid-template-columns: 1fr; } }
+    .leader-card { background: rgba(0,0,0,0.02); padding: 12px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.08); }
+    .leader-card label { font-size: 13px; font-weight: bold; color: var(--primary); display: block; margin-bottom: 4px; }
+
+    .ad-footer-container {
+      width: 100%; min-height: 50px; background: #f8f9fa; display: flex;
+      justify-content: center; align-items: center; border-top: 1px solid #eaeaea; margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="brand-container">
+      <span class="brand-icon">🤝</span>
+      <div>
+        <h1 data-i18n="appTitle">Cooperative : "Projet MINCO"</h1>
+        <div style="font-size: 11px; opacity: 0.85; font-weight: normal;" data-i18n="appSubtitle">Mfumo wa Pamoja wa Usimamizi wa Akiba, Mikopo & Jamii</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn" onclick="toggleDarkMode()" style="padding: 8px 12px; font-size: 12px; background: rgba(255,255,255,0.2);">🌓</button>
+      <button class="btn" onclick="toggleSidebar()" style="padding: 8px 12px; font-size: 16px; background: rgba(255,255,255,0.2);">⋮</button>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h3 style="margin:0; color:var(--primary);" data-i18n="menuTitle">Menyu</h3>
+      <button onclick="toggleSidebar()" style="background:none; border:none; font-size:18px; cursor:pointer; color:var(--text);">✕</button>
+    </div>
+    <ul class="sidebar-menu-list">
+      <li><button onclick="scrollToSection('sec-leaders')">👑 <span data-i18n="navLeaders">Chumba cha Viongozi</span></button></li>
+      <li><button onclick="scrollToSection('sec-members')">👥 <span data-i18n="navMembers">Wanachama</span></button></li>
+      <li><button onclick="scrollToSection('sec-cotis')">💰 <span data-i18n="navCotis">Michango</span></button></li>
+      <li><button onclick="scrollToSection('sec-loans')">💳 <span data-i18n="navLoans">Mikopo & Rejesho</span></button></li>
+      <li><button onclick="scrollToSection('sec-projects')">📑 <span data-i18n="navProjects">Miradi ya Jamii</span></button></li>
+      <li><button onclick="scrollToSection('sec-savings')">🏦 <span data-i18n="navSavings">Akiba Binafsi</span></button></li>
+      <li><button onclick="scrollToSection('sec-meetings')">📅 <span data-i18n="navMeetings">Mikutano</span></button></li>
+      <li><button onclick="scrollToSection('sec-fines')">🚨 <span data-i18n="navFines">Faini & Adhabu</span></button></li>
+      <li><button onclick="scrollToSection('sec-pvs')">📝 <span data-i18n="navPV">Muhtasari wa Vikao</span></button></li>
+      <li><button onclick="scrollToSection('sec-sim')">🧮 <span data-i18n="navSim">Kikokotoo cha Riba</span></button></li>
+      <li><button onclick="scrollToSection('sec-div')">📊 <span data-i18n="navDiv">Gawio la Faida</span></button></li>
+      <li><button onclick="scrollToSection('sec-shop')">🏷️ <span data-i18n="navShop">Duka la Pamoja</span></button></li>
+      <li><button onclick="scrollToSection('sec-presence')">📝 <span data-i18n="navPresence">Mahudhurio</span></button></li>
+      <li><button onclick="scrollToSection('sec-sugg')">🗂️ <span data-i18n="navSugg">Sanduku la Maoni</span></button></li>
+      <li><button onclick="scrollToSection('sec-backup')">💾 <span data-i18n="navBackup">Hifadhi Nakala (Backup)</span></button></li>
+      <hr style="border:0; border-top:1px solid rgba(0,0,0,0.1); margin:10px 0;">
+      <li><button onclick="openModal('settingsModal')">⚙️ <span data-i18n="navSettings">Mipangilio & Sarafu</span></button></li>
+      <li><button onclick="openModal('helpModal')">❓ <span data-i18n="navHelp">Jinsi ya Kutumia App</span></button></li>
+    </ul>
+  </div>
+
+  <!-- MODAL SETTINGS -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('settingsModal')">✕</button>
+      <h3 style="color:var(--primary); margin-top:0;" data-i18n="settingsTitle">⚙️ Mipangilio & Sarafu</h3>
+      
+      <label style="font-size:13px; font-weight:600;" data-i18n="labelLang">Lugha ya Programu:</label>
+      <select id="select-lang" onchange="changeLanguage(this.value)">
+        <option value="sw">Kiswahili</option>
+        <option value="fr">Français</option>
+        <option value="en">English</option>
+      </select>
+
+      <label style="font-size:13px; font-weight:600; margin-top:12px; display:block;" data-i18n="labelCurrency">Sarafu ya Pesa:</label>
+      <select id="select-currency" onchange="changeCurrency(this.value)">
+        <option value="FC">FC (Franc Congolais)</option>
+        <option value="FBU">FBU (Franc Burundais)</option>
+        <option value="KES">KES (Shilling Kenyan)</option>
+        <option value="USD">USD (Dollar)</option>
+        <option value="FCFA">FCFA</option>
+      </select>
+      <button class="btn" style="width:100%; margin-top:15px;" onclick="closeModal('settingsModal')" data-i18n="btnSaveSettings">Hifadhi</button>
+    </div>
+  </div>
+
+  <!-- MODAL HELP -->
+  <div class="modal-overlay" id="helpModal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('helpModal')">✕</button>
+      <h3 style="color:var(--primary); margin-top:0;" data-i18n="helpTitle">❓ Mwongozo wa Matumizi</h3>
+      <div style="font-size:14px; line-height:1.6; display:flex; flex-direction:column; gap:10px;">
+        <p><strong data-i18n="help1Title">1. Chumba cha Viongozi:</strong> <span data-i18n="help1Desc">Hapa unaweka na kuhifadhi majina ya viongozi wakuu wa Projet MINCO kwa mwaka husika na majukumu yao.</span></p>
+        <p><strong data-i18n="help2Title">2. Wanachama:</strong> <span data-i18n="help2Desc">Sajili wanachama ili waonekane kiotomatiki kwenye michango, akiba, na mahudhurio.</span></p>
+        <p><strong data-i18n="help3Title">3. Hifadhi Nakala (Offline):</strong> <span data-i18n="help3Desc">App hii inahifadhi kila kitu kwenye simu yako. Tumia kitufe cha Backup kupakua au kurudisha data zako muda wowote.</span></p>
+      </div>
+      <button class="btn" style="width:100%; margin-top:15px;" onclick="closeModal('helpModal')" data-i18n="btnClose">Funga</button>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- STATISTIQUES -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h4 data-i18n="statMembers">Jumla ya Wanachama</h4>
+        <p id="stat-members">0</p>
+      </div>
+      <div class="stat-card" style="border-left-color: var(--secondary);">
+        <h4 data-i18n="statLoans">Mikopo Inayoendelea</h4>
+        <p id="stat-loans" style="color:var(--secondary);">0</p>
+      </div>
+      <div class="stat-card" style="border-left-color: var(--accent);">
+        <h4 data-i18n="statProjects">Miradi Inayoendelea</h4>
+        <p id="stat-projects" style="color:var(--accent);">0</p>
+      </div>
+      <div class="stat-card" style="border-left-color: var(--info);">
+        <h4 data-i18n="statSavings">Jumla ya Akiba</h4>
+        <p id="stat-savings" style="color:var(--info);">0</p>
+      </div>
+    </div>
+
+    <!-- 👑 CHUMBA CHA VIONGOZI (BUREAU DES DIRIGEANTS) -->
+    <div id="sec-leaders" class="section animated-section" style="border-color: var(--secondary);">
+      <h3 style="color: var(--secondary);"><span data-i18n="secLeadersTitle">👑 Chumba cha Viongozi (Bureau Projet MINCO)</span></h3>
+      <p style="font-size:13px; color:gray; margin-top:-5px;" data-i18n="secLeadersDesc">Weka na uhifadhi majina ya viongozi na majukumu yao kwa mwaka huu.</p>
+      
+      <div class="leader-grid">
+        <!-- 1. Coordinateur -->
+        <div class="leader-card">
+          <label data-i18n="lblCoord">1. Coordinateur wa Mwaka Husika:</label>
+          <input type="text" id="lead-coord-name" data-i18n-placeholder="phLeadCoordName" placeholder="Jina la Coordinateur">
+          <input type="text" id="lead-coord-year" data-i18n-placeholder="phLeadCoordYear" placeholder="Mwaka husika (mf: 2026)">
+        </div>
+
+        <!-- 2. Msimamizi wa Wafanyakazi -->
+        <div class="leader-card">
+          <label data-i18n="lblHR">2. Msimamizi wa Wafanyakazi:</label>
+          <input type="text" id="lead-hr-name" data-i18n-placeholder="phLeadHRName" placeholder="Jina la Msimamizi wa Wafanyakazi">
+          <textarea id="lead-hr-details" data-i18n-placeholder="phLeadHRDetails" placeholder="Maelezo yote yanayohusu wafanyakazi..."></textarea>
+        </div>
+
+        <!-- 3. Anayehusika na Fedha -->
+        <div class="leader-card">
+          <label data-i18n="lblFin">3. Anayehusika na Fedha:</label>
+          <input type="text" id="lead-fin-name" data-i18n-placeholder="phLeadFinName" placeholder="Jina la Mhusika wa Fedha">
+          <textarea id="lead-fin-details" data-i18n-placeholder="phLeadFinDetails" placeholder="Maelezo ya mauzo, manunuzi na mengineyo..."></textarea>
+        </div>
+
+        <!-- 4. Mwandishi Mkuu -->
+        <div class="leader-card">
+          <label data-i18n="lblSec">4. Mwandishi Mkuu (Secrétaire Général):</label>
+          <input type="text" id="lead-sec-name" data-i18n-placeholder="phLeadSecName" placeholder="Jina la Mwandishi Mkuu">
+          <textarea id="lead-sec-details" data-i18n-placeholder="phLeadSecDetails" placeholder="Maelezo yote yanayomuhusu mwandishi..."></textarea>
+        </div>
+      </div>
+
+      <button class="btn btn-secondary" style="width:100%; margin-top:12px;" onclick="saveLeaders()" data-i18n="btnSaveLeaders">💾 Hifadhi Taarifa za Viongozi</button>
+    </div>
+
+    <!-- 👥 SECTION MEMBRES -->
+    <div id="sec-members" class="section animated-section">
+      <h3><span>👥 <span data-i18n="secMembersTitle">Wanachama wa Projet MINCO</span></span> <span id="count-members" style="font-size:14px; font-weight:normal;">0</span></h3>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <input type="text" id="member-name" data-i18n-placeholder="placeholderMember" placeholder="Jina la mwanachama mpya">
+        <button class="btn" onclick="addMember()" style="white-space:nowrap;" data-i18n="btnAdd">Ongeza</button>
+      </div>
+      <div id="members-list"></div>
+    </div>
+
+    <!-- 💰 SECTION COTISATIONS -->
+    <div id="sec-cotis" class="section animated-section" style="border-color: #27ae60;">
+      <h3 style="color:#27ae60;"><span data-i18n="secCotisTitle">💰 Management ya Michango</span></h3>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <select id="cotis-member"></select>
+        <select id="cotis-status">
+          <option value="Payé" data-i18n="optPaid">Imelipwa (Payé)</option>
+          <option value="En attente" data-i18n="optPending">Inasubiri (En attente)</option>
+        </select>
+        <button class="btn" onclick="addCotisation()" style="white-space:nowrap;" data-i18n="btnRecord">Rekodi</button>
+      </div>
+      <div id="cotis-list"></div>
+    </div>
+
+    <!-- 💳 PRETS -->
+    <div id="sec-loans" class="section animated-section" style="border-color: var(--secondary);">
+      <h3 style="color: var(--secondary);"><span data-i18n="secLoansTitle">💳 Mikopo & Rejesho</span></h3>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <input type="text" id="loan-member" data-i18n-placeholder="placeholderBeneficiary" placeholder="Jina la mkopaji">
+        <input type="number" id="loan-amount" data-i18n-placeholder="placeholderAmount" placeholder="Kiasi">
+        <button class="btn btn-secondary" onclick="addLoan()" style="white-space:nowrap;" data-i18n="btnAddLoan">Ongeza Mkopo</button>
+      </div>
+      <div id="loans-list"></div>
+    </div>
+
+    <!-- 📑 PROJETS -->
+    <div id="sec-projects" class="section animated-section" style="border-color: var(--warning);">
+      <h3 style="color: var(--warning);"><span data-i18n="secProjectsTitle">📑 Miradi ya Jamii</span></h3>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <input type="text" id="project-title" data-i18n-placeholder="placeholderProject" placeholder="Jina la mradi">
+        <button class="btn" style="background:var(--warning);" onclick="addProject()" data-i18n="btnAddProject">Ongeza Mradi</button>
+      </div>
+      <div id="projects-list"></div>
+    </div>
+
+    <!-- 🏦 AKIBA -->
+    <div id="sec-savings" class="section animated-section" style="border-color: var(--info);">
+      <h3 style="color: var(--info);"><span data-i18n="secSavingsTitle">🏦 Akiba Binafsi za Wanachama</span></h3>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <select id="save-member"></select>
+        <input type="number" id="save-amount" data-i18n-placeholder="placeholderSaveAmount" placeholder="Kiasi cha kuweka akiba">
+        <button class="btn btn-info" onclick="addSavings()" data-i18n="btnDeposit">Weka Amana</button>
+      </div>
+      <div id="savings-list"></div>
+    </div>
+
+    <!-- 📅 MIKUTANO -->
+    <div id="sec-meetings" class="section animated-section">
+      <h3 style="color: var(--primary);"><span data-i18n="secMeetingsTitle">📅 Mikutano Ijayo</span></h3>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <input type="text" id="meet-title" data-i18n-placeholder="placeholderMeetSubject" placeholder="Sababu/Mada ya mkutano">
+        <input type="date" id="meet-date">
+        <button class="btn" onclick="addMeeting()" data-i18n="btnPlan">Panga Kikao</button>
+      </div>
+      <div id="meetings-list"></div>
+    </div>
+
+    <!-- 🚨 FAINI -->
+    <div id="sec-fines" class="section animated-section" style="border-color: var(--danger);">
+      <h3 style="color: var(--danger);"><span data-i18n="secFinesTitle">🚨 Faini na Adhabu</span></h3>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <select id="fine-member"></select>
+        <input type="text" id="fine-reason" data-i18n-placeholder="placeholderReason" placeholder="Sababu (mf: Kuchelewa)">
+        <input type="number" id="fine-amount" data-i18n-placeholder="placeholderAmount" placeholder="Kiasi cha faini">
+        <button class="btn btn-danger" onclick="addFine()" data-i18n="btnAdd">Ongeza Faini</button>
+      </div>
+      <div id="fines-list"></div>
+    </div>
+
+    <!-- 📝 MUHTASARI (PV) -->
+    <div id="sec-pvs" class="section animated-section">
+      <h3 style="color: var(--secondary);"><span data-i18n="secPVTitle">📝 Muhtasari wa Vikao na Maamuzi</span></h3>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <input type="text" id="pv-desc" data-i18n-placeholder="placeholderPV" placeholder="Maamuzi yaliyofikiwa kwenye kikao...">
+        <button class="btn btn-secondary" onclick="addPV()" data-i18n="btnNote">Hifadhi Decision</button>
+      </div>
+      <div id="pv-list"></div>
+    </div>
+
+    <!-- 🧮 SIMULATEUR -->
+    <div id="sec-sim" class="section animated-section" style="border-color: var(--accent);">
+      <h3 style="color: var(--accent);"><span data-i18n="secSimTitle">🧮 Kikokotoo cha Riba ya Mkopo</span></h3>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <input type="number" id="sim-capital" data-i18n-placeholder="placeholderCapital" placeholder="Mtaji ulioikopwa">
+        <input type="number" id="sim-rate" placeholder="Riba %" value="5">
+      </div>
+      <button class="btn" onclick="calculateLoanInterest()" data-i18n="btnCalculate">Hesabu Riba & Total</button>
+      <p id="sim-result" style="margin-top:10px; font-weight:bold; color:var(--accent);"></p>
+    </div>
+
+    <!-- 📊 DIVIDENDES -->
+    <div id="sec-div" class="section animated-section" style="border-color: var(--warning);">
+      <h3 style="color: var(--warning);"><span data-i18n="secDivTitle">📊 Ugawaji wa Faida (Dividends)</span></h3>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <input type="number" id="div-total" data-i18n-placeholder="placeholderDivTotal" placeholder="Jumla ya faida ya kugawanya">
+        <button class="btn" style="background:var(--warning);" onclick="calculateDividends()" data-i18n="btnCalcByMember">Gawa kwa Kila Mwanachama</button>
+      </div>
+      <p id="div-result" style="margin-top:10px; font-weight:bold;"></p>
+    </div>
+
+    <!-- 🏷️ BOUTIQUE -->
+    <div id="sec-shop" class="section animated-section">
+      <h3 style="color: var(--primary);"><span data-i18n="secShopTitle">🏷️ Duka la Pamoja & Mauzo</span></h3>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <input type="text" id="prod-name" data-i18n-placeholder="placeholderProductItem" placeholder="Jina la bidhaa">
+        <input type="number" id="prod-price" data-i18n-placeholder="placeholderUnitPrice" placeholder="Bei ya moja">
+        <button class="btn" onclick="addProduct()" data-i18n="btnAddItem">Ongeza Bidhaa</button>
+      </div>
+      <div id="products-list"></div>
+    </div>
+
+    <!-- 📝 PRESENCE -->
+    <div id="sec-presence" class="section animated-section" style="border-color: var(--info);">
+      <h3 style="color: var(--info);"><span data-i18n="secPresenceTitle">📝 Mahudhurio ya Kikao</span></h3>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <select id="pres-member"></select>
+        <select id="pres-status">
+          <option value="Hapa" data-i18n="optPresent">Yupo (Présent)</option>
+          <option value="Udhuru" data-i18n="optExcused">Udhuru (Excusé)</option>
+          <option value="Hayupo" data-i18n="optAbsent">Hayupo (Absent)</option>
+        </select>
+        <button class="btn btn-info" onclick="addPresence()" data-i18n="btnMark">Rekodi</button>
+      </div>
+      <div id="presence-list"></div>
+    </div>
+
+    <!-- 🗂️ SUGGESTIONS -->
+    <div id="sec-sugg" class="section animated-section" style="border-color: var(--secondary);">
+      <h3 style="color: var(--secondary);"><span data-i18n="secSuggTitle">🗂️ Sanduku la Maoni</span></h3>
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <input type="text" id="sugg-text" data-i18n-placeholder="placeholderSuggestion" placeholder="Maoni yako au malalamiko...">
+        <button class="btn btn-secondary" onclick="addSuggestion()" data-i18n="btnSubmit">Tuma</button>
+      </div>
+      <div id="suggestions-list"></div>
+    </div>
+
+    <!-- 💾 BACKUP -->
+    <div id="sec-backup" class="section animated-section" style="border-color: #27ae60;">
+      <h3 style="color: #27ae60;"><span data-i18n="secBackupTitle">💾 Hifadhi Nakala (Backup JSON)</span></h3>
+      <p style="font-size:13px; color:gray; margin-top:0;" data-i18n="backupDesc">Pakua data zote za Projet MINCO au ingiza faili ya zamani kuirejesha.</p>
+      <div style="display:flex; gap:10px; flex-wrap: wrap;">
+        <button class="btn" onclick="exportDataJSON()" data-i18n="btnExport">📥 Hamisha Data (Export)</button>
+        <label class="btn" style="background:var(--secondary); cursor:pointer; margin:0; display:inline-flex; align-items:center;">
+          <span data-i18n="btnImport">📤 Ingiza Faili (Import)</span>
+          <input type="file" id="import-file" accept=".json" onchange="importDataJSON(event)" style="display:none;">
+        </label>
+      </div>
+    </div>
+
+    <div class="ad-footer-container">
+      <div style="font-size: 12px; color: #666; padding: 8px;" data-i18n="footerBanner">
+        🔖 Cooperative Projet MINCO - App Inafanya Kazi 100% Offline bila Mtandao
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const translations = {
+      sw: {
+        appTitle: 'Cooperative : "Projet MINCO"',
+        appSubtitle: "Mfumo wa Pamoja wa Usimamizi wa Akiba, Mikopo & Jamii",
+        menuTitle: "Menyu",
+        navLeaders: "Chumba cha Viongozi",
+        navMembers: "Wanachama",
+        navCotis: "Michango",
+        navLoans: "Mikopo & Rejesho",
+        navProjects: "Miradi ya Jamii",
+        navSavings: "Akiba Binafsi",
+        navMeetings: "Mikutano",
+        navFines: "Faini & Adhabu",
+        navPV: "Muhtasari wa Vikao",
+        navSim: "Kikokotoo cha Riba",
+        navDiv: "Gawio la Faida",
+        navShop: "Duka la Pamoja",
+        navPresence: "Mahudhurio",
+        navSugg: "Sanduku la Maoni",
+        navBackup: "Hifadhi Nakala",
+        navSettings: "Mipangilio & Sarafu",
+        navHelp: "Jinsi ya Kutumia",
+        settingsTitle: "⚙️ Mipangilio & Sarafu",
+        labelLang: "Lugha ya Programu:",
+        labelCurrency: "Sarafu ya Pesa:",
+        btnSaveSettings: "Hifadhi",
+        helpTitle: "❓ Mwongozo wa Matumizi",
+        help1Title: "1. Chumba cha Viongozi:",
+        help1Desc: "Hapa unaweka na kuhifadhi majina ya viongozi wakuu wa Projet MINCO kwa mwaka husika na majukumu yao.",
+        help2Title: "2. Wanachama:",
+        help2Desc: "Sajili wanachama ili waonekane kiotomatiki kwenye michango, akiba, na mahudhurio.",
+        help3Title: "3. Hifadhi Nakala (Offline):",
+        help3Desc: "App hii inahifadhi kila kitu kwenye simu yako. Tumia kitufe cha Backup kupakua au kurudisha data zako muda wowote.",
+        btnClose: "Funga",
+        statMembers: "Jumla ya Wanachama",
+        statLoans: "Mikopo Inayoendelea",
+        statProjects: "Miradi Inayoendelea",
+        statSavings: "Jumla ya Akiba",
+        secLeadersTitle: "👑 Chumba cha Viongozi (Bureau Projet MINCO)",
+        secLeadersDesc: "Weka na uhifadhi majina ya viongozi na majukumu yao kwa mwaka huu.",
+        lblCoord: "1. Coordinateur wa Mwaka Husika:",
+        phLeadCoordName: "Jina la Coordinateur",
+        phLeadCoordYear: "Mwaka husika (mf: 2026)",
+        lblHR: "2. Msimamizi wa Wafanyakazi:",
+        phLeadHRName: "Jina la Msimamizi wa Wafanyakazi",
+        phLeadHRDetails: "Maelezo yote yanayohusu wafanyakazi...",
+        lblFin: "3. Anayehusika na Fedha:",
+        phLeadFinName: "Jina la Mhusika wa Fedha",
+        phLeadFinDetails: "Maelezo ya mauzo, manunuzi na mengineyo...",
+        lblSec: "4. Mwandishi Mkuu (Secrétaire Général):",
+        phLeadSecName: "Jina la Mwandishi Mkuu",
+        phLeadSecDetails: "Maelezo yote yanayomuhusu mwandishi...",
+        btnSaveLeaders: "💾 Hifadhi Taarifa za Viongozi",
+        secMembersTitle: "Wanachama wa Projet MINCO",
+        btnAdd: "Ongeza",
+        secCotisTitle: "💰 Management ya Michango",
+        optPaid: "Imelipwa (Payé)",
+        optPending: "Inasubiri (En attente)",
+        btnRecord: "Rekodi",
+        secLoansTitle: "💳 Mikopo & Rejesho",
+        btnAddLoan: "Ongeza Mkopo",
+        secProjectsTitle: "📑 Miradi ya Jamii",
+        btnAddProject: "Ongeza Mradi",
+        secSavingsTitle: "🏦 Akiba Binafsi za Wanachama",
+        btnDeposit: "Weka Amana",
+        secMeetingsTitle: "📅 Mikutano Ijayo",
+        btnPlan: "Panga Kikao",
+        secFinesTitle: "🚨 Faini na Adhabu",
+        secPVTitle: "📝 Muhtasari wa Vikao na Maamuzi",
+        btnNote: "Hifadhi Decision",
+        secSimTitle: "🧮 Kikokotoo cha Riba ya Mkopo",
+        btnCalculate: "Hesabu Riba & Total",
+        secDivTitle: "📊 Ugawaji wa Faida (Dividends)",
+        btnCalcByMember: "Gawa kwa Kila Mwanachama",
+        secShopTitle: "🏷️ Duka la Pamoja & Mauzo",
+        btnAddItem: "Ongeza Bidhaa",
+        secPresenceTitle: "📝 Mahudhurio ya Kikao",
+        optPresent: "Yupo (Présent)",
+        optExcused: "Udhuru (Excusé)",
+        optAbsent: "Hayupo (Absent)",
+        btnMark: "Rekodi",
+        secSuggTitle: "🗂️ Sanduku la Maoni",
+        btnSubmit: "Tuma",
+        secBackupTitle: "💾 Hifadhi Nakala (Backup JSON)",
+        backupDesc: "Pakua data zote za Projet MINCO au ingiza faili ya zamani kuirejesha.",
+        btnExport: "📥 Hamisha Data (Export)",
+        btnImport: "📤 Ingiza Faili (Import)",
+        footerBanner: "🔖 Cooperative Projet MINCO - App Inafanya Kazi 100% Offline bila Mtandao",
+        placeholderMember: "Jina la mwanachama mpya",
+        placeholderBeneficiary: "Jina la mkopaji",
+        placeholderAmount: "Kiasi",
+        placeholderProject: "Jina la mradi",
+        placeholderSaveAmount: "Kiasi cha kuweka akiba",
+        placeholderMeetSubject: "Sababu/Mada ya mkutano",
+        placeholderReason: "Sababu (mf: Kuchelewa)",
+        placeholderPV: "Maamuzi yaliyofikiwa kwenye kikao...",
+        placeholderCapital: "Mtaji ulioikopwa",
+        placeholderDivTotal: "Jumla ya faida ya kugawanya",
+        placeholderProductItem: "Jina la bidhaa",
+        placeholderUnitPrice: "Bei ya moja",
+        placeholderSuggestion: "Maoni yako au malalamiko...",
+        btnDelete: "Futa",
+        btnCloseLoan: "Maliza",
+        btnWithdraw: "Toa",
+        btnCancel: "Ghairi",
+        btnClear: "Safisha",
+        noMembers: "Hakuna wanachama.",
+        noCotis: "Hakuna michango.",
+        noLoans: "Hakuna mikopo.",
+        noProjects: "Hakuna miradi.",
+        noSavings: "Hakuna akiba.",
+        noMeetings: "Hakuna mikutano.",
+        noFines: "Hakuna faini.",
+        noPV: "Hakuna muhtasari.",
+        noProducts: "Hakuna bidhaa.",
+        noPresence: "Hakuna mahudhurio.",
+        noSuggestions: "Hakuna maoni."
+      },
+      fr: {
+        appTitle: 'Coopérative : "Projet MINCO"',
+        appSubtitle: "Plateforme Intégrée de Gestion Communautaire & Financière",
+        menuTitle: "Navigation",
+        navLeaders: "Bureau des Dirigeants",
+        navMembers: "Membres",
+        navCotis: "Cotisations",
+        navLoans: "Prêts & Remboursements",
+        navProjects: "Projets Communautaires",
+        navSavings: "Épargne Personnelle",
+        navMeetings: "Réunions",
+        navFines: "Amendes & Sanctions",
+        navPV: "Procès-Verbaux",
+        navSim: "Simulateur d'Intérêts",
+        navDiv: "Répartition Dividendes",
+        navShop: "Boutique & Ventes",
+        navPresence: "Registre de Présence",
+        navSugg: "Boîte à Suggestions",
+        navBackup: "Sauvegarde / Restauration",
+        navSettings: "Paramètres & Devise",
+        navHelp: "Aide / Mode d'emploi",
+        settingsTitle: "⚙️ Paramètres & Devise",
+        labelLang: "Langue de l'application :",
+        labelCurrency: "Devise Monétaire :",
+        btnSaveSettings: "Enregistrer",
+        helpTitle: "❓ Guide d'utilisation",
+        help1Title: "1. Bureau des Dirigeants :",
+        help1Desc: "Enregistrez les noms et attributions des dirigeants pour l'année en cours.",
+        help2Title: "2. Membres :",
+        help2Desc: "Ajoutez les membres pour les retrouver automatiquement dans tous les modules.",
+        help3Title: "3. Sauvegarde Hors-Ligne :",
+        help3Desc: "Vos données restent stockées localement. Exportez des sauvegardes JSON régulières.",
+        btnClose: "Fermer",
+        statMembers: "Total Membres",
+        statLoans: "Prêts en cours",
+        statProjects: "Projets Actifs",
+        statSavings: "Épargne Totale",
+        secLeadersTitle: "👑 Bureau des Dirigeants (Projet MINCO)",
+        secLeadersDesc: "Renseignez le comité de gestion et leurs attributions pour l'année.",
+        lblCoord: "1. Coordinateur de l'Année :",
+        phLeadCoordName: "Nom du Coordinateur",
+        phLeadCoordYear: "Année concernée (ex: 2026)",
+        lblHR: "2. Responsable du Personnel :",
+        phLeadHRName: "Nom du Responsable du Personnel",
+        phLeadHRDetails: "Détails concernant le personnel...",
+        lblFin: "3. Chargé des Finances (Ventes/Achats) :",
+        phLeadFinName: "Nom du Chargé des Finances",
+        phLeadFinDetails: "Ventes, achats et finances...",
+        lblSec: "4. Secrétaire Général / Rédacteur :",
+        phLeadSecName: "Nom du Secrétaire Général",
+        phLeadSecDetails: "Toutes les attributions du secrétaire...",
+        btnSaveLeaders: "💾 Enregistrer le Bureau",
+        secMembersTitle: "Membres du Projet MINCO",
+        btnAdd: "Ajouter",
+        secCotisTitle: "💰 Gestion des Cotisations",
+        optPaid: "Payé",
+        optPending: "En attente",
+        btnRecord: "Enregistrer",
+        secLoansTitle: "💳 Prêts & Remboursements",
+        btnAddLoan: "Ajouter Prêt",
+        secProjectsTitle: "📑 Projets Communautaires",
+        btnAddProject: "Ajouter Projet",
+        secSavingsTitle: "🏦 Épargne Personnelle des Membres",
+        btnDeposit: "Déposer",
+        secMeetingsTitle: "📅 Prochaines Réunions",
+        btnPlan: "Planifier",
+        secFinesTitle: "🚨 Registre des Amendes",
+        secPVTitle: "📝 Procès-Verbaux & Décisions",
+        btnNote: "Noter",
+        secSimTitle: "🧮 Simulateur d'Intérêts",
+        btnCalculate: "Calculer Total",
+        secDivTitle: "📊 Répartition des Bénéfices",
+        btnCalcByMember: "Calculer par Membre",
+        secShopTitle: "🏷️ Boutique Communautaire",
+        btnAddItem: "Ajouter Article",
+        secPresenceTitle: "📝 Registre de Présence",
+        optPresent: "Présent(e)",
+        optExcused: "Excusé(e)",
+        optAbsent: "Absent(e)",
+        btnMark: "Marquer",
+        secSuggTitle: "🗂️ Boîte à Suggestions",
+        btnSubmit: "Soumettre",
+        secBackupTitle: "💾 Sauvegarde & Restauration JSON",
+        backupDesc: "Téléchargez une sauvegarde complète ou restaurez un fichier existant.",
+        btnExport: "📥 Exporter Base de Données",
+        btnImport: "📤 Importer Fichier",
+        footerBanner: "🔖 Projet MINCO - Application 100% Hors-Ligne & Sécurisée",
+        placeholderMember: "Nom du nouveau membre",
+        placeholderBeneficiary: "Nom du bénéficiaire",
+        placeholderAmount: "Montant",
+        placeholderProject: "Intitulé du projet",
+        placeholderSaveAmount: "Montant à épargner",
+        placeholderMeetSubject: "Sujet de la réunion",
+        placeholderReason: "Motif de l'amende",
+        placeholderPV: "Résumé de la décision...",
+        placeholderCapital: "Capital emprunté",
+        placeholderDivTotal: "Bénéfice total net",
+        placeholderProductItem: "Nom du produit",
+        placeholderUnitPrice: "Prix unitaire",
+        placeholderSuggestion: "Votre suggestion...",
+        btnDelete: "Supprimer",
+        btnCloseLoan: "Clôturer",
+        btnWithdraw: "Retirer",
+        btnCancel: "Annuler",
+        btnClear: "Effacer",
+        noMembers: "Aucun membre.",
+        noCotis: "Aucune cotisation.",
+        noLoans: "Aucun prêt en cours.",
+        noProjects: "Aucun projet.",
+        noSavings: "Aucune épargne.",
+        noMeetings: "Aucune réunion.",
+        noFines: "Aucune amende.",
+        noPV: "Aucun procès-verbal.",
+        noProducts: "Aucun article.",
+        noPresence: "Aucune présence.",
+        noSuggestions: "Aucune suggestion."
+      },
+      en: {
+        appTitle: 'Cooperative: "Projet MINCO"',
+        appSubtitle: "Integrated Community & Financial Management Platform",
+        menuTitle: "Navigation",
+        navLeaders: "Leadership Bureau",
+        navMembers: "Members",
+        navCotis: "Contributions",
+        navLoans: "Loans & Repayments",
+        navProjects: "Community Projects",
+        navSavings: "Personal Savings",
+        navMeetings: "Meetings",
+        navFines: "Fines & Penalties",
+        navPV: "Meeting Minutes",
+        navSim: "Interest Calculator",
+        navDiv: "Dividend Distribution",
+        navShop: "Community Shop",
+        navPresence: "Attendance Register",
+        navSugg: "Suggestion Box",
+        navBackup: "Backup / Restore",
+        navSettings: "Settings & Currency",
+        navHelp: "How to use",
+        settingsTitle: "⚙️ Settings & Currency",
+        labelLang: "App Language:",
+        labelCurrency: "Monetary Currency:",
+        btnSaveSettings: "Save",
+        helpTitle: "❓ User Guide",
+        help1Title: "1. Leadership Bureau:",
+        help1Desc: "Save the leadership team names and responsibilities for the current year.",
+        help2Title: "2. Members:",
+        help2Desc: "Add members so they automatically show up across all modules.",
+        help3Title: "3. Offline Backup:",
+        help3Desc: "All data is saved in your local browser. Export JSON backups anytime.",
+        btnClose: "Close",
+        statMembers: "Total Members",
+        statLoans: "Active Loans",
+        statProjects: "Active Projects",
+        statSavings: "Total Savings",
+        secLeadersTitle: "👑 Leadership Bureau (Projet MINCO)",
+        secLeadersDesc: "Record annual executives and their respective roles.",
+        lblCoord: "1. Year Coordinator:",
+        phLeadCoordName: "Coordinator Name",
+        phLeadCoordYear: "Year (e.g., 2026)",
+        lblHR: "2. Personnel / HR Manager:",
+        phLeadHRName: "HR Manager Name",
+        phLeadHRDetails: "All staff related details...",
+        lblFin: "3. Financial Officer (Sales/Purchases):",
+        phLeadFinName: "Financial Manager Name",
+        phLeadFinDetails: "Sales, purchases, and cashflow details...",
+        lblSec: "4. Chief Secretary:",
+        phLeadSecName: "Secretary Name",
+        phLeadSecDetails: "Secretary responsibilities & notes...",
+        btnSaveLeaders: "💾 Save Bureau Info",
+        secMembersTitle: "Projet MINCO Members",
+        btnAdd: "Add",
+        secCotisTitle: "💰 Contribution Management",
+        optPaid: "Paid",
+        optPending: "Pending",
+        btnRecord: "Record",
+        secLoansTitle: "💳 Loans & Repayments",
+        btnAddLoan: "Add Loan",
+        secProjectsTitle: "📑 Community Projects",
+        btnAddProject: "Add Project",
+        secSavingsTitle: "🏦 Members Personal Savings",
+        btnDeposit: "Deposit",
+        secMeetingsTitle: "📅 Upcoming Meetings",
+        btnPlan: "Plan",
+        secFinesTitle: "🚨 Fines & Penalties Register",
+        secPVTitle: "📝 Decisions & Minutes Journal",
+        btnNote: "Save Note",
+        secSimTitle: "🧮 Loan Interest Simulator",
+        btnCalculate: "Calculate Total",
+        secDivTitle: "📊 Annual Profit Distribution",
+        btnCalcByMember: "Calculate per Member",
+        secShopTitle: "🏷️ Community Shop & Sales",
+        btnAddItem: "Add Item",
+        secPresenceTitle: "📝 Attendance Register",
+        optPresent: "Present",
+        optExcused: "Excused",
+        optAbsent: "Absent",
+        btnMark: "Mark",
+        secSuggTitle: "🗂️ Suggestion Box",
+        btnSubmit: "Submit",
+        secBackupTitle: "💾 Data Backup & Restore (JSON)",
+        backupDesc: "Download full database backup or restore from file.",
+        btnExport: "📥 Export Database",
+        btnImport: "📤 Import File",
+        footerBanner: "🔖 Cooperative Projet MINCO - 100% Offline Capable",
+        placeholderMember: "New member name",
+        placeholderBeneficiary: "Beneficiary name",
+        placeholderAmount: "Amount",
+        placeholderProject: "Project title",
+        placeholderSaveAmount: "Amount to save",
+        placeholderMeetSubject: "Meeting topic",
+        placeholderReason: "Reason for fine",
+        placeholderPV: "Decision summary...",
+        placeholderCapital: "Borrowed amount",
+        placeholderDivTotal: "Total net profit",
+        placeholderProductItem: "Product name",
+        placeholderUnitPrice: "Unit price",
+        placeholderSuggestion: "Your suggestion...",
+        btnDelete: "Delete",
+        btnCloseLoan: "Close",
+        btnWithdraw: "Withdraw",
+        btnCancel: "Cancel",
+        btnClear: "Clear",
+        noMembers: "No members.",
+        noCotis: "No contributions.",
+        noLoans: "No active loans.",
+        noProjects: "No projects.",
+        noSavings: "No savings.",
+        noMeetings: "No meetings.",
+        noFines: "No fines.",
+        noPV: "No minutes.",
+        noProducts: "No catalog items.",
+        noPresence: "No attendance.",
+        noSuggestions: "No suggestions."
+      }
+    };
+
+    let currentLang = localStorage.getItem('minco_lang') || 'sw';
+    let currentCurrency = localStorage.getItem('minco_currency') || 'FC';
+
+    let db = JSON.parse(localStorage.getItem('minco_db')) || {
+      leaders: {
+        coordName: "", coordYear: "2026",
+        hrName: "", hrDetails: "",
+        finName: "", finDetails: "",
+        secName: "", secDetails: ""
+      },
+      members: ["Ali", "Marie", "Jean Bosco"],
+      cotisations: [{ name: "Ali", status: "Payé" }],
+      loans: [{ name: "Ali", amount: 150000, deadline: "30 days" }],
+      projects: [{ title: "Kununua shamba la ushirika" }],
+      savings: [],
+      meetings: [],
+      fines: [],
+      pvs: [],
+      products: [],
+      presences: [],
+      suggestions: []
+    };
+
+    function saveData() {
+      localStorage.setItem('minco_db', JSON.stringify(db));
+      renderAll();
+    }
+
+    function saveLeaders() {
+      db.leaders = {
+        coordName: document.getElementById('lead-coord-name').value.trim(),
+        coordYear: document.getElementById('lead-coord-year').value.trim(),
+        hrName: document.getElementById('lead-hr-name').value.trim(),
+        hrDetails: document.getElementById('lead-hr-details').value.trim(),
+        finName: document.getElementById('lead-fin-name').value.trim(),
+        finDetails: document.getElementById('lead-fin-details').value.trim(),
+        secName: document.getElementById('lead-sec-name').value.trim(),
+        secDetails: document.getElementById('lead-sec-details').value.trim()
+      };
+      saveData();
+      alert(currentLang === 'sw' ? "Taarifa za viongozi zimehifadhiwa!" : currentLang === 'en' ? "Leaders info saved!" : "Informations du bureau enregistrées !");
+    }
+
+    function loadLeadersUI() {
+      if (!db.leaders) return;
+      document.getElementById('lead-coord-name').value = db.leaders.coordName || "";
+      document.getElementById('lead-coord-year').value = db.leaders.coordYear || "";
+      document.getElementById('lead-hr-name').value = db.leaders.hrName || "";
+      document.getElementById('lead-hr-details').value = db.leaders.hrDetails || "";
+      document.getElementById('lead-fin-name').value = db.leaders.finName || "";
+      document.getElementById('lead-fin-details').value = db.leaders.finDetails || "";
+      document.getElementById('lead-sec-name').value = db.leaders.secName || "";
+      document.getElementById('lead-sec-details').value = db.leaders.secDetails || "";
+    }
+
+    function changeLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('minco_lang', lang);
+      applyTranslations();
+    }
+
+    function changeCurrency(curr) {
+      currentCurrency = curr;
+      localStorage.setItem('minco_currency', curr);
+      renderAll();
+    }
+
+    function applyTranslations() {
+      const t = translations[currentLang] || translations.sw;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.innerText = t[key];
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (t[key]) el.placeholder = t[key];
+      });
+      document.getElementById('select-lang').value = currentLang;
+      document.getElementById('select-currency').value = currentCurrency;
+      renderAll();
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('active');
+      document.getElementById('sidebarOverlay').classList.toggle('active');
+    }
+
+    function scrollToSection(id) {
+      toggleSidebar();
+      const el = document.getElementById(id);
+      if(el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+
+    // --- LOGIQUE METIER ---
+    function addMember() {
+      const name = document.getElementById("member-name").value.trim();
+      if(name && !db.members.includes(name)) {
+        db.members.push(name);
+        document.getElementById("member-name").value = "";
+        saveData();
+      }
+    }
+    function removeMember(i) { db.members.splice(i, 1); saveData(); }
+
+    function addCotisation() {
+      const name = document.getElementById("cotis-member").value;
+      const status = document.getElementById("cotis-status").value;
+      const ex = db.cotisations.find(c => c.name === name);
+      if(ex) ex.status = status;
+      else db.cotisations.push({ name, status });
+      saveData();
+    }
+
+    function addLoan() {
+      const name = document.getElementById("loan-member").value.trim();
+      const amount = parseFloat(document.getElementById("loan-amount").value);
+      if(name && !isNaN(amount)) {
+        db.loans.push({ name, amount, deadline: "30 siku" });
+        document.getElementById("loan-member").value = "";
+        document.getElementById("loan-amount").value = "";
+        saveData();
+      }
+    }
+    function removeLoan(i) { db.loans.splice(i, 1); saveData(); }
+
+    function addProject() {
+      const title = document.getElementById("project-title").value.trim();
+      if(title) { db.projects.push({ title }); document.getElementById("project-title").value = ""; saveData(); }
+    }
+    function removeProject(i) { db.projects.splice(i, 1); saveData(); }
+
+    function addSavings() {
+      const name = document.getElementById("save-member").value;
+      const amount = parseFloat(document.getElementById("save-amount").value);
+      if(name && !isNaN(amount)) {
+        db.savings.push({ name, amount });
+        document.getElementById("save-amount").value = "";
+        saveData();
+      }
+    }
+    function removeSavings(i) { db.savings.splice(i, 1); saveData(); }
+
+    function addMeeting() {
+      const title = document.getElementById("meet-title").value.trim();
+      const date = document.getElementById("meet-date").value;
+      if(title && date) {
+        db.meetings.push({ title, date });
+        document.getElementById("meet-title").value = "";
+        document.getElementById("meet-date").value = "";
+        saveData();
+      }
+    }
+    function removeMeeting(i) { db.meetings.splice(i, 1); saveData(); }
+
+    function addFine() {
+      const name = document.getElementById("fine-member").value;
+      const reason = document.getElementById("fine-reason").value.trim();
+      const amount = parseFloat(document.getElementById("fine-amount").value);
+      if(name && reason && !isNaN(amount)) {
+        db.fines.push({ name, reason, amount });
+        document.getElementById("fine-reason").value = "";
+        document.getElementById("fine-amount").value = "";
+        saveData();
+      }
+    }
+    function removeFine(i) { db.fines.splice(i, 1); saveData(); }
+
+    function addPV() {
+      const desc = document.getElementById("pv-desc").value.trim();
+      if(desc) {
+        db.pvs.push({ desc, date: new Date().toLocaleDateString() });
+        document.getElementById("pv-desc").value = "";
+        saveData();
+      }
+    }
+    function removePV(i) { db.pvs.splice(i, 1); saveData(); }
+
+    function calculateLoanInterest() {
+      const c = parseFloat(document.getElementById("sim-capital").value);
+      const r = parseFloat(document.getElementById("sim-rate").value);
+      if(isNaN(c) || isNaN(r)) return;
+      const interest = (c * r) / 100;
+      const total = c + interest;
+      const t = translations[currentLang];
+      document.getElementById("sim-result").innerText = `${t.navSim}: ${interest.toLocaleString()} ${currentCurrency} | Total: ${total.toLocaleString()} ${currentCurrency}`;
+    }
+
+    function calculateDividends() {
+      const total = parseFloat(document.getElementById("div-total").value);
+      if(isNaN(total) || db.members.length === 0) return;
+      const part = total / db.members.length;
+      document.getElementById("div-result").innerText = `Kila Mwanachama (${db.members.length}): ${part.toLocaleString()} ${currentCurrency}`;
+    }
+
+    function addProduct() {
+      const name = document.getElementById("prod-name").value.trim();
+      const price = parseFloat(document.getElementById("prod-price").value);
+      if(name && !isNaN(price)) {
+        db.products.push({ name, price });
+        document.getElementById("prod-name").value = "";
+        document.getElementById("prod-price").value = "";
+        saveData();
+      }
+    }
+    function removeProduct(i) { db.products.splice(i, 1); saveData(); }
+
+    function addPresence() {
+      const name = document.getElementById("pres-member").value;
+      const status = document.getElementById("pres-status").value;
+      db.presences.push({ name, status, date: new Date().toLocaleDateString() });
+      saveData();
+    }
+    function removePresence(i) { db.presences.splice(i, 1); saveData(); }
+
+    function addSuggestion() {
+      const text = document.getElementById("sugg-text").value.trim();
+      if(text) {
+        db.suggestions.push({ text });
+        document.getElementById("sugg-text").value = "";
+        saveData();
+      }
+    }
+    function removeSuggestion(i) { db.suggestions.splice(i, 1); saveData(); }
+
+    // --- EXPORT / IMPORT JSON ---
+    function exportDataJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "projet_minco_backup.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importDataJSON(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          db = JSON.parse(evt.target.result);
+          saveData();
+          loadLeadersUI();
+          alert(currentLang === 'sw' ? "Data zimeingizwa kwa mafanikio!" : "Données importées avec succès !");
+        } catch(err) {
+          alert("JSON Format Error");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // --- RENDERING ---
+    function renderAll() {
+      const t = translations[currentLang] || translations.sw;
+
+      document.getElementById("stat-members").innerText = db.members.length;
+      document.getElementById("count-members").innerText = `${db.members.length}`;
+      let totalLoans = db.loans.reduce((sum, l) => sum + l.amount, 0);
+      document.getElementById("stat-loans").innerText = totalLoans.toLocaleString() + " " + currentCurrency;
+      document.getElementById("stat-projects").innerText = db.projects.length;
+      let totalSavings = db.savings.reduce((sum, s) => sum + s.amount, 0);
+      document.getElementById("stat-savings").innerText = totalSavings.toLocaleString() + " " + currentCurrency;
+
+      ["cotis-member", "save-member", "fine-member", "pres-member"].forEach(id => {
+        const sel = document.getElementById(id);
+        if(sel) {
+          sel.innerHTML = "";
+          db.members.forEach(m => sel.innerHTML += `<option value="${m}">${m}</option>`);
+        }
+      });
+
+      const memList = document.getElementById("members-list");
+      memList.innerHTML = db.members.length ? "" : `<p style='color:gray; font-size:14px;'>${t.noMembers}</p>`;
+      db.members.forEach((m, i) => {
+        memList.innerHTML += `<div class="list-item"><span>👤 <strong>${m}</strong></span><button class="btn btn-danger" onclick="removeMember(${i})">${t.btnDelete}</button></div>`;
+      });
+
+      const cotisList = document.getElementById("cotis-list");
+      cotisList.innerHTML = db.cotisations.length ? "" : `<p style='color:gray; font-size:14px;'>${t.noCotis}</p>`;
+      db.cotisations.forEach(c => {
+        cotisList.innerHTML += `<div class="list-item"><span>💰 <strong>${c.name}</strong></span><span style="background:var(--accent); color:white; padding:3px 8px; border-radius:6px; font-size:12px;">${c.status}</span></div>`;
+      });
+
+      const loansList = document.getElementById("loans-list");
+      loansList.innerHTML = db.loans.length ? "" : `<p style='color:gray; font-size:14px;'>${t.noLoans}</p>`;
+      db.loans.forEach((l, i) => {
+        loansList.innerHTML += `<div class="list-item"><span>💳 <strong>${l.name}</strong> : ${l.amount.toLocaleString()} ${currentCurrency}</span><button class="btn btn-danger" onclick="removeLoan(${i})">${t.btnCloseLoan}</button></div>`;
+      });
+
+      const projList = document.getElementById("projects-list");
+      projList.innerHTML = db.projects.length ? "" : `<p style='color:gray; font-size:14px;'>${t.noProjects}</p>`;
+      db.projects.forEach((p, i) => {
+        projList.innerHTML += `<div class="list-item"><span>📑 <strong>${p.title}</strong></span><button class="btn btn-danger" onclick="removeProject(${i})">${t.btnDelete}</button></div>`;
+      });
+
+      const savList = document.getElementById("savings-list");
+      savList.innerHTML = db.savings.length ? "" : `<p style='color:gray; font-size:14px;'>${t.noSavings}</p>`;
+      db.savings.forEach((s, i) => {
+        savList.innerHTML += `<div class="list-item"><span>🏦 <strong>${s.name}</strong> : ${s.amount.toLocaleString()} ${currentCurrency}</span><button class="btn btn-danger" onclick="removeSavings(${i})">${t.btnWithdraw}</button></div>`;
+      });
+
+      const meetList = document.getElementById("meetings-list");
+      meetList.innerHTML = db.meetings.length ? "" : `<p style='color:gray; font-size:14px;'>${t.noMeetings}</p>`;
+      db.meetings.forEach((m, i) => {
+        meetList.innerHTML += `<div class="list-item"><span>📅 <strong>${m.title}</strong> (${m.date})</span><button class="btn btn-danger" onclick="removeMeeting(${i})">${t.btnCancel}</button></div>`;
+      });
+
+      const fineList = document.getElementById("fines-list");
+      fineList.innerHTML = db.fines.length ? "" : `<p style='color:gray; font-size:14px;'>${t.noFines}</p>`;
+      db.fines.forEach((f, i) => {
+        fineList.innerHTML += `<div class="list-item"><span>🚨 <strong>${f.name}</strong> : ${f.reason} (${f.amount.toLocaleString()} ${currentCurrency})</span><button class="btn btn-danger" onclick="removeFine(${i})">${t.btnClear}</button></div>`;
+      });
+
+      const pvList = document.getElementById("pv-list");
+      pvList.innerHTML = db.pvs.length ? "" : `<p style='color:gray; font-size:14px;'>${t.noPV}</p>`;
+      db.pvs.forEach((p, i) => {
+        pvList.innerHTML += `<div class="list-item"><span>📝 [${p.date}] <strong>${p.desc}</strong></span><button class="btn btn-danger" onclick="removePV(${i})">${t.btnDelete}</button></div>`;
+      });
+
+      const prodList = document.getElementById("products-list");
+      prodList.innerHTML = db.products.length ? "" : `<p style='color:gray; font-size:14px;'>${t.noProducts}</p>`;
+      db.products.forEach((pr, i) => {
+        prodList.innerHTML += `<div class="list-item"><span>🏷️ <strong>${pr.name}</strong> : ${pr.price.toLocaleString()} ${currentCurrency}</span><button class="btn btn-danger" onclick="removeProduct(${i})">${t.btnWithdraw}</button></div>`;
+      });
+
+      const presList = document.getElementById("presence-list");
+      presList.innerHTML = db.presences.length ? "" : `<p style='color:gray; font-size:14px;'>${t.noPresence}</p>`;
+      db.presences.forEach((pr, i) => {
+        presList.innerHTML += `<div class="list-item"><span>📝 [${pr.date}] <strong>${pr.name}</strong> : ${pr.status}</span><button class="btn btn-danger" onclick="removePresence(${i})">X</button></div>`;
+      });
+
+      const suggList = document.getElementById("suggestions-list");
+      suggList.innerHTML = db.suggestions.length ? "" : `<p style='color:gray; font-size:14px;'>${t.noSuggestions}</p>`;
+      db.suggestions.forEach((su, i) => {
+        suggList.innerHTML += `<div class="list-item"><span>🗂️ "${su.text}"</span><button class="btn btn-danger" onclick="removeSuggestion(${i})">${t.btnDelete}</button></div>`;
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTranslations();
+      loadLeadersUI();
+    });
+  </script>
+</body>
+</html>
