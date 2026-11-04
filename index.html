@@ -45,7 +45,7 @@
       50% { transform: translateY(-5px); }
     }
 
-    .animated-section { animation: fadeIn 0.5s ease-out forwards; }
+    .animated-section { animation: fadeIn 0.4s ease-out forwards; }
 
     /* TOPBAR */
     .topbar {
@@ -63,7 +63,7 @@
     }
     .header-actions { display: flex; align-items: center; gap: 10px; }
 
-    /* SIDEBAR */
+    /* SIDEBAR (KUSHOTO / LEFT) */
     .sidebar-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
@@ -72,23 +72,25 @@
     .sidebar-overlay.active { opacity: 1; visibility: visible; }
 
     .sidebar {
-      position: fixed; top: 0; right: -300px; width: 280px; height: 100%;
+      position: fixed; top: 0; left: -300px; width: 280px; height: 100%;
       background: var(--card-bg); color: var(--text); z-index: 2001;
-      box-shadow: -5px 0 25px rgba(0,0,0,0.2); transition: right 0.3s ease;
+      box-shadow: 5px 0 25px rgba(0,0,0,0.2); transition: left 0.3s ease;
       display: flex; flex-direction: column; padding: 20px; overflow-y: auto;
     }
-    .sidebar.active { right: 0; }
+    .sidebar.active { left: 0; }
     .sidebar-header {
       display: flex; justify-content: space-between; align-items: center;
       border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 15px;
     }
-    .sidebar-menu-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+    .sidebar-menu-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
     .sidebar-menu-list li button {
       display: flex; align-items: center; gap: 10px; width: 100%;
       padding: 12px 15px; background: rgba(0,0,0,0.03); border: none; border-radius: 8px;
       color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: left;
     }
-    .sidebar-menu-list li button:hover { background: var(--primary); color: white; transform: translateX(4px); }
+    .sidebar-menu-list li button:hover, .sidebar-menu-list li button.active-btn {
+      background: var(--primary); color: white; transform: translateX(4px);
+    }
 
     /* MODALS */
     .modal-overlay {
@@ -110,12 +112,16 @@
 
     .container { max-width: 850px; margin: 25px auto; padding: 0 15px; }
     
+    /* SECTIONS (Default Display: None) */
     .section {
-      margin-top: 22px; padding: 22px; border-radius: 14px;
+      display: none;
+      margin-top: 15px; padding: 22px; border-radius: 14px;
       background: var(--card-bg); border: 2px solid var(--primary);
       box-shadow: 0 6px 15px rgba(0,0,0,0.06); transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
-    .section:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .section.active-section {
+      display: block;
+    }
     .section h3 { margin-top: 0; color: var(--primary); display: flex; justify-content: space-between; align-items: center; font-size: 18px; border-bottom: 2px dashed rgba(0,0,0,0.08); padding-bottom: 8px; }
 
     .btn {
@@ -139,8 +145,9 @@
     .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 6px; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 15px; }
     .list-item:hover { background: rgba(0,0,0,0.015); border-radius: 6px; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
-    .stat-card { background: var(--card-bg); padding: 18px; border-radius: 12px; border-left: 6px solid var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.04); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-card { background: var(--card-bg); padding: 18px; border-radius: 12px; border-left: 6px solid var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.04); cursor: pointer; transition: transform 0.2s; }
+    .stat-card:hover { transform: translateY(-3px); }
     .stat-card h4 { margin: 0; font-size: 13px; color: gray; text-transform: uppercase; }
     .stat-card p { margin: 8px 0 0 0; font-size: 22px; font-weight: bold; color: var(--primary); }
 
@@ -160,6 +167,7 @@
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="brand-container">
+      <button class="btn" onclick="toggleSidebar()" style="padding: 8px 12px; font-size: 18px; background: rgba(255,255,255,0.2);">☰</button>
       <span class="brand-icon">🤝</span>
       <div>
         <h1 data-i18n="appTitle">Cooperative : "Projet MINCO"</h1>
@@ -168,11 +176,10 @@
     </div>
     <div class="header-actions">
       <button class="btn" onclick="toggleDarkMode()" style="padding: 8px 12px; font-size: 12px; background: rgba(255,255,255,0.2);">🌓</button>
-      <button class="btn" onclick="toggleSidebar()" style="padding: 8px 12px; font-size: 16px; background: rgba(255,255,255,0.2);">⋮</button>
     </div>
   </div>
 
-  <!-- SIDEBAR -->
+  <!-- SIDEBAR (UPANDE WA KUSHOTO) -->
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -180,21 +187,21 @@
       <button onclick="toggleSidebar()" style="background:none; border:none; font-size:18px; cursor:pointer; color:var(--text);">✕</button>
     </div>
     <ul class="sidebar-menu-list">
-      <li><button onclick="scrollToSection('sec-leaders')">👑 <span data-i18n="navLeaders">Chumba cha Viongozi</span></button></li>
-      <li><button onclick="scrollToSection('sec-members')">👥 <span data-i18n="navMembers">Wanachama</span></button></li>
-      <li><button onclick="scrollToSection('sec-cotis')">💰 <span data-i18n="navCotis">Michango</span></button></li>
-      <li><button onclick="scrollToSection('sec-loans')">💳 <span data-i18n="navLoans">Mikopo & Rejesho</span></button></li>
-      <li><button onclick="scrollToSection('sec-projects')">📑 <span data-i18n="navProjects">Miradi ya Jamii</span></button></li>
-      <li><button onclick="scrollToSection('sec-savings')">🏦 <span data-i18n="navSavings">Akiba Binafsi</span></button></li>
-      <li><button onclick="scrollToSection('sec-meetings')">📅 <span data-i18n="navMeetings">Mikutano</span></button></li>
-      <li><button onclick="scrollToSection('sec-fines')">🚨 <span data-i18n="navFines">Faini & Adhabu</span></button></li>
-      <li><button onclick="scrollToSection('sec-pvs')">📝 <span data-i18n="navPV">Muhtasari wa Vikao</span></button></li>
-      <li><button onclick="scrollToSection('sec-sim')">🧮 <span data-i18n="navSim">Kikokotoo cha Riba</span></button></li>
-      <li><button onclick="scrollToSection('sec-div')">📊 <span data-i18n="navDiv">Gawio la Faida</span></button></li>
-      <li><button onclick="scrollToSection('sec-shop')">🏷️ <span data-i18n="navShop">Duka la Pamoja</span></button></li>
-      <li><button onclick="scrollToSection('sec-presence')">📝 <span data-i18n="navPresence">Mahudhurio</span></button></li>
-      <li><button onclick="scrollToSection('sec-sugg')">🗂️ <span data-i18n="navSugg">Sanduku la Maoni</span></button></li>
-      <li><button onclick="scrollToSection('sec-backup')">💾 <span data-i18n="navBackup">Hifadhi Nakala (Backup)</span></button></li>
+      <li><button id="btn-sec-leaders" onclick="showSection('sec-leaders')">👑 <span data-i18n="navLeaders">Chumba cha Viongozi</span></button></li>
+      <li><button id="btn-sec-members" onclick="showSection('sec-members')">👥 <span data-i18n="navMembers">Wanachama</span></button></li>
+      <li><button id="btn-sec-cotis" onclick="showSection('sec-cotis')">💰 <span data-i18n="navCotis">Michango</span></button></li>
+      <li><button id="btn-sec-loans" onclick="showSection('sec-loans')">💳 <span data-i18n="navLoans">Mikopo & Rejesho</span></button></li>
+      <li><button id="btn-sec-projects" onclick="showSection('sec-projects')">📑 <span data-i18n="navProjects">Miradi ya Jamii</span></button></li>
+      <li><button id="btn-sec-savings" onclick="showSection('sec-savings')">🏦 <span data-i18n="navSavings">Akiba Binafsi</span></button></li>
+      <li><button id="btn-sec-meetings" onclick="showSection('sec-meetings')">📅 <span data-i18n="navMeetings">Mikutano</span></button></li>
+      <li><button id="btn-sec-fines" onclick="showSection('sec-fines')">🚨 <span data-i18n="navFines">Faini & Adhabu</span></button></li>
+      <li><button id="btn-sec-pvs" onclick="showSection('sec-pvs')">📝 <span data-i18n="navPV">Muhtasari wa Vikao</span></button></li>
+      <li><button id="btn-sec-sim" onclick="showSection('sec-sim')">🧮 <span data-i18n="navSim">Kikokotoo cha Riba</span></button></li>
+      <li><button id="btn-sec-div" onclick="showSection('sec-div')">📊 <span data-i18n="navDiv">Gawio la Faida</span></button></li>
+      <li><button id="btn-sec-shop" onclick="showSection('sec-shop')">🏷️ <span data-i18n="navShop">Duka la Pamoja</span></button></li>
+      <li><button id="btn-sec-presence" onclick="showSection('sec-presence')">📝 <span data-i18n="navPresence">Mahudhurio</span></button></li>
+      <li><button id="btn-sec-sugg" onclick="showSection('sec-sugg')">🗂️ <span data-i18n="navSugg">Sanduku la Maoni</span></button></li>
+      <li><button id="btn-sec-backup" onclick="showSection('sec-backup')">💾 <span data-i18n="navBackup">Hifadhi Nakala (Backup)</span></button></li>
       <hr style="border:0; border-top:1px solid rgba(0,0,0,0.1); margin:10px 0;">
       <li><button onclick="openModal('settingsModal')">⚙️ <span data-i18n="navSettings">Mipangilio & Sarafu</span></button></li>
       <li><button onclick="openModal('helpModal')">❓ <span data-i18n="navHelp">Jinsi ya Kutumia App</span></button></li>
@@ -242,61 +249,53 @@
 
   <div class="container">
 
-    <!-- STATISTIQUES -->
+    <!-- STATISTIQUES (Kadi zinazobonyezeka) -->
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card" onclick="showSection('sec-members')">
         <h4 data-i18n="statMembers">Jumla ya Wanachama</h4>
         <p id="stat-members">0</p>
       </div>
-      <div class="stat-card" style="border-left-color: var(--secondary);">
+      <div class="stat-card" style="border-left-color: var(--secondary);" onclick="showSection('sec-loans')">
         <h4 data-i18n="statLoans">Mikopo Inayoendelea</h4>
         <p id="stat-loans" style="color:var(--secondary);">0</p>
       </div>
-      <div class="stat-card" style="border-left-color: var(--accent);">
+      <div class="stat-card" style="border-left-color: var(--accent);" onclick="showSection('sec-projects')">
         <h4 data-i18n="statProjects">Miradi Inayoendelea</h4>
         <p id="stat-projects" style="color:var(--accent);">0</p>
       </div>
-      <div class="stat-card" style="border-left-color: var(--info);">
+      <div class="stat-card" style="border-left-color: var(--info);" onclick="showSection('sec-savings')">
         <h4 data-i18n="statSavings">Jumla ya Akiba</h4>
         <p id="stat-savings" style="color:var(--info);">0</p>
       </div>
     </div>
 
-    <!-- 👑 CHUMBA CHA VIONGOZI (BUREAU DES DIRIGEANTS) -->
+    <!-- 👑 CHUMBA CHA VIONGOZI -->
     <div id="sec-leaders" class="section animated-section" style="border-color: var(--secondary);">
       <h3 style="color: var(--secondary);"><span data-i18n="secLeadersTitle">👑 Chumba cha Viongozi (Bureau Projet MINCO)</span></h3>
       <p style="font-size:13px; color:gray; margin-top:-5px;" data-i18n="secLeadersDesc">Weka na uhifadhi majina ya viongozi na majukumu yao kwa mwaka huu.</p>
       
       <div class="leader-grid">
-        <!-- 1. Coordinateur -->
         <div class="leader-card">
           <label data-i18n="lblCoord">1. Coordinateur wa Mwaka Husika:</label>
           <input type="text" id="lead-coord-name" data-i18n-placeholder="phLeadCoordName" placeholder="Jina la Coordinateur">
           <input type="text" id="lead-coord-year" data-i18n-placeholder="phLeadCoordYear" placeholder="Mwaka husika (mf: 2026)">
         </div>
-
-        <!-- 2. Msimamizi wa Wafanyakazi -->
         <div class="leader-card">
           <label data-i18n="lblHR">2. Msimamizi wa Wafanyakazi:</label>
           <input type="text" id="lead-hr-name" data-i18n-placeholder="phLeadHRName" placeholder="Jina la Msimamizi wa Wafanyakazi">
           <textarea id="lead-hr-details" data-i18n-placeholder="phLeadHRDetails" placeholder="Maelezo yote yanayohusu wafanyakazi..."></textarea>
         </div>
-
-        <!-- 3. Anayehusika na Fedha -->
         <div class="leader-card">
           <label data-i18n="lblFin">3. Anayehusika na Fedha:</label>
           <input type="text" id="lead-fin-name" data-i18n-placeholder="phLeadFinName" placeholder="Jina la Mhusika wa Fedha">
           <textarea id="lead-fin-details" data-i18n-placeholder="phLeadFinDetails" placeholder="Maelezo ya mauzo, manunuzi na mengineyo..."></textarea>
         </div>
-
-        <!-- 4. Mwandishi Mkuu -->
         <div class="leader-card">
           <label data-i18n="lblSec">4. Mwandishi Mkuu (Secrétaire Général):</label>
           <input type="text" id="lead-sec-name" data-i18n-placeholder="phLeadSecName" placeholder="Jina la Mwandishi Mkuu">
           <textarea id="lead-sec-details" data-i18n-placeholder="phLeadSecDetails" placeholder="Maelezo yote yanayomuhusu mwandishi..."></textarea>
         </div>
       </div>
-
       <button class="btn btn-secondary" style="width:100%; margin-top:12px;" onclick="saveLeaders()" data-i18n="btnSaveLeaders">💾 Hifadhi Taarifa za Viongozi</button>
     </div>
 
@@ -850,6 +849,39 @@
       renderAll();
     }
 
+    /* MFUMO WA KUCHAGUA KADI MOJA TU (SINGLE CARD VIEW) */
+    function showSection(sectionId) {
+      // Ficha sehemu zote
+      document.querySelectorAll('.section').forEach(sec => {
+        sec.classList.remove('active-section');
+      });
+      // Ondoa active class kwenye vitufe vya sidebar
+      document.querySelectorAll('.sidebar-menu-list button').forEach(btn => {
+        btn.classList.remove('active-btn');
+      });
+
+      // Onyesha sehemu iliyochaguliwa tu
+      const targetSection = document.getElementById(sectionId);
+      if(targetSection) {
+        targetSection.classList.add('active-section');
+      }
+
+      // Weka active class kwenye kitufe cha menyu
+      const targetBtn = document.getElementById('btn-' + sectionId);
+      if(targetBtn) {
+        targetBtn.classList.add('active-btn');
+      }
+
+      // Funga sidebar kama ipo wazi
+      const sidebar = document.getElementById('sidebar');
+      if(sidebar.classList.contains('active')) {
+        toggleSidebar();
+      }
+
+      // Scroll taratibu hadi kwenye kadi
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function saveLeaders() {
       db.leaders = {
         coordName: document.getElementById('lead-coord-name').value.trim(),
@@ -907,12 +939,6 @@
     function toggleSidebar() {
       document.getElementById('sidebar').classList.toggle('active');
       document.getElementById('sidebarOverlay').classList.toggle('active');
-    }
-
-    function scrollToSection(id) {
-      toggleSidebar();
-      const el = document.getElementById(id);
-      if(el) el.scrollIntoView({ behavior: 'smooth' });
     }
 
     function openModal(id) { document.getElementById(id).classList.add('active'); }
@@ -1168,6 +1194,8 @@
     document.addEventListener("DOMContentLoaded", () => {
       applyTranslations();
       loadLeadersUI();
+      // Onyesha kadi ya kwanza (Chumba cha Viongozi) mara ya kwanza inapofunguka
+      showSection('sec-leaders');
     });
   </script>
 </body>
